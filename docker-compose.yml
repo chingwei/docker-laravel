@@ -1,0 +1,69 @@
+version: '2'
+services:
+    pgsql:
+        image: postgres
+        container_name: pgsql
+        ports:
+          - "55432:5432"
+        restart: always
+        expose:
+            - "5432"
+        volumes:
+            - "../storage/pg:/var/lib/postgresql/data"
+        environment:
+            - POSTGRES_DB=ami
+            - POSTGRES_USER=chingwei
+            - POSTGRES_PASSWORD=whupwos
+        networks:
+            - overlay
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+    redis:
+        image: redis
+        container_name: redis
+        ports:
+          - "6379:6379"
+        restart: always
+        expose:
+            - "6379"
+        volumes:
+            - "../storage/redis:/data"
+        networks:
+            - overlay
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+    web:
+        build:
+          context: ./docker/laravel
+          #dockerfile: "./docker/web/Dockerfile"
+        container_name: ami-web
+        ports:
+          - "55580:80"
+          - "55543:443"
+          - "51122:22"
+        restart: always
+        expose:
+            - "80"
+            - "443"
+            - "22"
+        volumes:
+#            - "/var/services/web/img:/home/www/img"
+            - "../storage/code/ami:/home/www/laravel"
+        networks:
+            - overlay
+        command: /bin/bash -c "/wrapper.sh"
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+        depends_on:
+            - redis
+            - pgsql
+
+networks:
+  overlay:
+
